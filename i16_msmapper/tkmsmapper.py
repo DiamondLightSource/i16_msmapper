@@ -56,6 +56,7 @@ class MsMapperGui:
         self.output_file = tk.StringVar(self.root, '')
         self.output_size = tk.StringVar(self.root, '')
         self.output_type = tk.StringVar(self.root, 'Volume_HKL')
+        self.lab_frame = tk.BooleanVar(self.root, False)
         self.normby = tk.StringVar(self.root, 'None')
         self.polarisation = tk.BooleanVar(self.root, False)
         self.use_autobox = tk.BooleanVar(self.root, False)
@@ -178,6 +179,8 @@ class MsMapperGui:
         var.config(font=SF, width=14, bg=opt, activebackground=opt_active)
         var["menu"].config(bg=opt, bd=0, activebackground=opt_active)
         var.pack(side=tk.LEFT)
+        var = tk.Checkbutton(frm, text='Lab frame', variable=self.lab_frame, font=SF)
+        var.pack(side=tk.LEFT, padx=6)
 
         frm = tk.Frame(mid)
         frm.pack(side=tk.TOP, expand=True)
@@ -393,6 +396,7 @@ class MsMapperGui:
             'shape': None if autobox else box_size,
             'step': hkl_step,
             'output_mode': output_type,
+            'to_crystal': not self.lab_frame.get(),
             'normalisation': None if (norm := self.normby.get()) == 'None' else norm,
             'polarisation': True if self.polarisation.get() else None,
             'reduce_box': self.reduce_box.get(),
@@ -424,7 +428,7 @@ class MsMapperGui:
         files = self.get_files()
         output_file = self.output_file.get()
         hkl_start, hkl_step, box_size = self.get_hkl()
-        rsmap = mapper_runner.rsmap_command(files, output_file, hkl_step)
+        rsmap = mapper_runner.rsmap_command(files, output_file, hkl_step.replace(' ', ''))
 
         screenwidth = self.root.winfo_screenwidth()
         width = len(rsmap) + 2 if len(rsmap) < screenwidth * 0.67 else screenwidth // 2

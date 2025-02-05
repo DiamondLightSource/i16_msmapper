@@ -48,11 +48,11 @@ Diamond Light Source Ltd.
 """
 import sys
 
-from i16_msmapper.mapper_runner import run_msmapper, get_nexus_hkl, get_pixel_steps
+from i16_msmapper.mapper_runner import run_msmapper, get_nexus_hkl, get_pixel_steps, msmapper_version
 from i16_msmapper.tkmsmapper import MsMapperGui
 
-__version__ = '1.4.1'
-__date__ = '07/10/24'
+__version__ = '1.5.0'
+__date__ = '05/02/25'
 
 
 def version_info():
@@ -66,6 +66,9 @@ def title():
 def module_info():
     out = 'Python version %s' % sys.version
     out += '\n%s' % version_info()
+    # MSMapper
+    version = msmapper_version() or 'Not available'
+    out += '\n  msmapper version: %s' % version
     # Modules
     import numpy
     out += '\n     numpy version: %s' % numpy.__version__

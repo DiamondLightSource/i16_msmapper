@@ -6,6 +6,7 @@ $ module load msmapper
 
 """
 
+import sys
 import os
 import tempfile
 import subprocess
@@ -44,6 +45,16 @@ class Options(TypedDict):
     reduce_box: None | bool
     third_axis: None | list[float, float, float]
     azi_plane_normal: None | list[float, float, float]
+
+
+def msmapper_version():
+    """Return numeric version of msmapper, or 0 if not available"""
+    path = next((p for p in sys.path if 'apps/msmapper/' in p), '')  # find /dls_sw/apps/msmapper/version
+    print('path: ', path)
+    try:
+        return float(os.path.basename(path))
+    except ValueError:
+        return 0
 
 
 def msmapper(bean_file):
@@ -314,7 +325,7 @@ def plotter_script(output_file):
 
 
 def create_bean(input_files, output_file, start=None, shape=None, step=None,
-                output_mode=None, normalisation=None, polarisation=None,
+                output_mode=None, to_crystal=None, normalisation=None, polarisation=None,
                 detector_region=None, reduce_box=None, third_axis=None,
                 azi_plane_normal=None):
     """
@@ -326,6 +337,7 @@ def create_bean(input_files, output_file, start=None, shape=None, step=None,
     :param shape: [n, m, o] size of box in voxels (None to omit and calcualte autobox)
     :param step: [dh, dk, dl] step size in each direction - size of voxel in reciprocal lattice units
     :param output_mode: 'Volume_HKL' or 'Volume_Q' type of calculation
+    :param to_crystal: for Volume_Q, use the crystal frame if True, or Lab frame otherwise
     :param normalisation: Monitor value to use for normalisation, e.g. 'rc'
     :param polarisation: Bool apply polarisation correction
     :param detector_region: [sx, ex, sy, ey] region of interest on detector
@@ -338,6 +350,9 @@ def create_bean(input_files, output_file, start=None, shape=None, step=None,
     # Remove empty entries
     while '' in input_files:
         input_files.remove('')
+
+    version = msmapper_version()
+
     if step is None:
         step = [0.001, 0.001, 0.001]
     else:
@@ -370,13 +385,15 @@ def create_bean(input_files, output_file, start=None, shape=None, step=None,
     }
     if output_mode:
         bean['outputMode'] = output_mode
+    if version > 1.8 and to_crystal is not None:
+        bean['toCrystalFrame'] = to_crystal
     if normalisation:
         bean['monitorName'] = normalisation
     if polarisation:
         bean['correctPolarization'] = polarisation
     if detector_region:
         bean['region'] = detector_region
-    if third_axis:
+    if version > 1.7 and third_axis:
         bean['thirdAxis'] = np.array(third_axis).tolist()
         bean['aziPlaneNormal'] = np.array(azi_plane_normal).tolist()
     return bean

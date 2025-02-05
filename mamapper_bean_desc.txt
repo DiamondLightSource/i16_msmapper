@@ -11,6 +11,9 @@ bean = {
     outputMode
       [str] Type of output generated, see below for options
 
+    toCrystalFrame
+      [bool] if False, Q-mappings will be in the basis of the lab frame, rather than the Crystal frame
+
     splitterName
       [str] one of the following strings "nearest", "gaussian", "negexp", "inverse"
 
@@ -27,7 +30,7 @@ bean = {
     thirdAxis
       [list] direction of volume's third axis
 
-    aziPlaneNormal
+    aziPlaneNormal (V1.8+)
       [list] normal of azimuthal reference plane
 
     correctPolarization
@@ -55,6 +58,9 @@ Volume_HKL,Volume_Q,Volume_QCP,Volume_QES,
 Area_HK,Area_KL,Area_LH,Area_QPP,Area_QXY,Area_QYZ,Area_QZX,
 Line_H,Line_K,Line_L,Line_Theta,Line_2Theta,Line_QX,Line_QY,Line_QZ,
 Coords_HKL,Coords_Q
+
+Q-coordinates are in the basis of the sample frame, unless toCrystalFrame=False, in which
+case the coordinates are given in the lab frame (version 1.9+).
 
 Area_HK     Area in Miller-space (H,K)
 Area_KL     Area in Miller-space (K,L)

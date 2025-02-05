@@ -8,11 +8,11 @@ Links:
  - [Javadocs](https://alfred.diamond.ac.uk/documentation/javadocs/GDA/master/uk/ac/diamond/scisoft/analysis/diffraction/MillerSpaceMapper.html)
  - [I16 Confluence Page](https://confluence.diamond.ac.uk/display/I16/HKL+Mapping)
 
-By Dan Porter, Diamond Light Source Ltd. 2024
+By Dan Porter, Diamond Light Source Ltd. 2024-2025
 
 ### Usage
 ```commandline
-$ module load msmapper/1.8
+$ module load msmapper/1.9
 $ python -m pip install --upgrade git+https://github.com/DiamondLightSource/i16_msmapper.git
 $ python -m i16_msmapper
 ```
@@ -34,7 +34,7 @@ python -m pip install --upgrade git+https://github.com/DiamondLightSource/i16_ms
 ### Usage on Linux (Diamond Workstation)
 The following commands can be used on a beamline or DLS linux workstation (including NXuser)
 ```bash
-$ module load msmapper/1.8
+$ module load msmapper/1.9
 $ python -m pip install --upgrade git+https://github.com/DiamondLightSource/i16_msmapper.git
 $ python -m i16_msmapper
 ```
@@ -43,7 +43,7 @@ $ python -m i16_msmapper
 MSMapper can be run outside Diamond by downloading the executable file. 
 The following options are for Windows but files for other operating systems are available and the process is similar.
 
-1. Install i16_hdfmap as above
+1. Install i16_msmapper as above
 2. Access the MSMapper files for different operating systems here: https://alfred.diamond.ac.uk/MSMapper/master/downloads/builds-snapshot/ 
 3. Download "MSMapper-1.7.0.v20240513-1606-win32.x86_64.zip" or equivalent
 4. Unzip the file to your choosen location
@@ -86,6 +86,9 @@ bean = {
 
     outputMode
       [str] Type of output generated, see below for options
+    
+    toCrystalFrame
+      [bool] if False, Q-mappings will be in the basis of the lab frame, rather than the Crystal frame
 
     splitterName
       [str] one of the following strings "nearest", "gaussian", "negexp", "inverse"
@@ -127,6 +130,10 @@ bean = {
 ```
 
 ### Output Modes
+
+Q-coordinates are in the basis of the sample frame (z along c, as Busing & Levy B matrix), as defined in the input file, 
+unless toCrystalFrame=False, in which case the coordinates are given in the 
+lab frame (version 1.9+).
 
 | Output Mode | Description                                                      |
 |-------------|------------------------------------------------------------------|
