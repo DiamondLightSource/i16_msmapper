@@ -52,7 +52,7 @@ from i16_msmapper.mapper_runner import run_msmapper, get_nexus_hkl, get_pixel_st
 from i16_msmapper.tkmsmapper import MsMapperGui
 
 __version__ = '1.5.0'
-__date__ = '05/02/25'
+__date__ = '04/07/25'
 
 
 def version_info():
@@ -72,6 +72,16 @@ def module_info():
     # Modules
     import numpy
     out += '\n     numpy version: %s' % numpy.__version__
+    try:
+        import matplotlib
+        out += '\nmatplotlib version: %s' % matplotlib.__version__
+    except ImportError:
+        out += '\nmatplotlib version: None'
+    try:
+        import hdfmap
+        out += '\nhdfmap version: %s (%s)' % (hdfmap.__version__, hdfmap.__date__)
+    except ImportError:
+        out += '\nhdfmap version: Not available'
     import tkinter
     out += '\n   tkinter version: %s' % tkinter.TkVersion
     out += '\n'
