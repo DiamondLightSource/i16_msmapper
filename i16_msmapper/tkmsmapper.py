@@ -354,12 +354,17 @@ class MsMapperGui:
 
     def check_config(self):
         """Check config directories are accessible"""
-        while os.access(self.config[CONFIG_NAME], os.W_OK):
+        if not os.access(self.config[FILEDIR], os.R_OK):
+            self.config[FILEDIR] = CONFIG[FILEDIR]
+        # Files
+        while os.path.isfile(self.config[CONFIG_NAME]) and not os.access(self.config[CONFIG_NAME], os.W_OK):
             self.config[CONFIG_NAME] = self.config[CONFIG_NAME].replace('i16_msmapper_config', 'i16_msmapper_config_new')
-        while os.access(self.config[TMPBEAN], os.W_OK):
+        while os.path.isfile(self.config[TMPBEAN]) and not os.access(self.config[TMPBEAN], os.W_OK):
             self.config[TMPBEAN] = self.config[TMPBEAN].replace('tmp_remap', 'tmp_remap_new')
-        while os.access(self.config[TMPNXS], os.W_OK):
+        while os.path.isfile(self.config[TMPNXS]) and not os.access(self.config[TMPNXS], os.W_OK):
             self.config[TMPNXS] = self.config[TMPNXS].replace('tmp_remap', 'tmp_remap_new')
+        print('Config:')
+        print('\n'.join(f"{name}: {value}" for name, value in self.config.items()))
 
     def get_files(self):
         """Get files"""
@@ -676,7 +681,7 @@ class MsMapperGui:
     def btn_get_step(self):
         """Run msmapper to get minimum pixel step"""
         files = self.get_files()
-        dh, dk, dl = mapper_runner.get_pixel_steps(files[0], self.config[TMPBEAN], self.config[TMPNXS])
+        dh, dk, dl = mapper_runner.get_pixel_steps(files[0], self.config[TMPNXS], self.config[TMPBEAN])
         self.hkl_step.set(f"[{dh:.4f}, {dk:.4f}, {dl:.4f}]")
 
     def event_set_hkl_start(self, event):
