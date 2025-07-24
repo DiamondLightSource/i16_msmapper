@@ -30,6 +30,8 @@ if not os.access(TEMPDIR, os.W_OK):
     if not os.access(TEMPDIR, os.W_OK):
         TEMPDIR = os.path.expanduser('~')
 print('Writable TEMPDIR = %s' % TEMPDIR)
+TEMP_BEAN = os.path.join(TEMPDIR, TEMP_BEAN)
+TEMP_NEXUS = os.path.join(TEMPDIR, TEMP_NEXUS)
 
 
 class Options(TypedDict):
@@ -150,7 +152,28 @@ def get_nexus_hkl(nexus_file):
     return h, k, l
 
 
-def get_pixel_steps(nexus_file):
+def get_remap_values(nexus_file):
+    """
+    Get hkl values from Nexus file
+    """
+    scan = hdfmap.NexusLoader(nexus_file)
+    if 'h_axis' in scan.map:
+        h_axis, k_axis, l_axis = scan('h_axis, k_axis, l_axis')
+    else:
+        raise KeyError('h,k,l are not in the nexus file')
+    h_min = h_axis[0]
+    h_step = np.mean(np.diff(h_axis))
+    h_size = len(h_axis)
+    k_min = k_axis[0]
+    k_step = np.mean(np.diff(k_axis))
+    k_size = len(k_axis)
+    l_min = l_axis[0]
+    l_step = np.mean(np.diff(l_axis))
+    l_size = len(l_axis)
+    return h_min, h_step, h_size, k_min, k_step, k_size, l_min, l_step, l_size
+
+
+def get_pixel_steps(nexus_file, nxs_file=TEMP_NEXUS, bean_file=TEMP_BEAN):
     """
     Get minimum pixel steps for a scan file
      - Creates & stores json bean file with outputMode: 'Coords_HKL' + fixed pixel indexes
@@ -162,8 +185,6 @@ def get_pixel_steps(nexus_file):
     :return: h_diff, k_diff, l_diff
     """
 
-    nxs_file = os.path.join(TEMPDIR, TEMP_NEXUS)
-    bean_file = os.path.join(TEMPDIR, TEMP_BEAN)
     bean = {
         "inputs": [nexus_file],
         "output": nxs_file,
@@ -186,7 +207,7 @@ def get_pixel_steps(nexus_file):
     return hkl_diff
 
 
-def generate_pixel_coordinates(nexus_file):
+def generate_pixel_coordinates(nexus_file, bean_file=TEMP_BEAN):
     """
     Get minimum pixel steps for a scan file
      - Creates & stores json bean file with outputMode: 'Coords_HKL' + fixed pixel indexes
@@ -213,7 +234,6 @@ def generate_pixel_coordinates(nexus_file):
         pixelIndexes.append([idx, 0, 0])
 
     outfile = nexus_file.replace('.nxs', '_pixel_hkl.nxs')
-    bean_file = os.path.join(TEMPDIR, TEMP_BEAN)
     bean = {
         "inputs": [nexus_file],
         "output": outfile,
@@ -257,7 +277,7 @@ def rsmap_batch(input_files, output_directory, step=0.002):
     return [rsmap_command(file, output_directory, step=step) for file in input_files]
 
 
-def msmapper_script(input_files, output_file, start=None, shape=None, step=None):
+def msmapper_script(input_files, output_file, start=None, shape=None, step=None, bean_file=TEMP_BEAN):
     """
     Create a script that generates a bean file and runs msmapper
      currently only allows a few standard inputs: hkl_start, shape and step values.
@@ -266,6 +286,7 @@ def msmapper_script(input_files, output_file, start=None, shape=None, step=None)
     :param start: [h, k, l] start of box
     :param shape: [n, m, o] size of box in voxels
     :param step: [dh, dk, dl] step size in each direction - size of voxel in reciprocal lattice units
+    :param bean_file: temporary input file
     :return: str script
     """
     input_files = np.asarray(input_files, dtype=str).reshape(-1).tolist()
@@ -293,7 +314,7 @@ def msmapper_script(input_files, output_file, start=None, shape=None, step=None)
         "start": str(list(start)),
         "shape": str(list(shape)),
         "reduceToNonZero": 'False',
-        "bean_file": os.path.join(TEMPDIR, TEMP_BEAN),
+        "bean_file": bean_file,
     }
 
     with open(TEMPLATE, 'r') as f:
@@ -410,7 +431,7 @@ def create_bean_file(bean_file=None, **kwargs: Unpack[Options]):
     bean = create_bean(**kwargs)
 
     if bean_file is None:
-        bean_file = os.path.join(TEMPDIR, TEMP_BEAN)
+        bean_file = TEMP_BEAN
     json.dump(bean, open(bean_file, 'w'), indent=4)
     print('bean file written to: %s' % bean_file)
     return bean_file

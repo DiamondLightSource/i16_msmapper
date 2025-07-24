@@ -587,18 +587,17 @@ def plot_remap_q(nexus_file):
     scan = get_remap(nexus_file)
 
     # Get reciprocal space data from file
-    h = scan('h_axis')
-    k = scan('k_axis')
-    l = scan('l_axis')
     vol = scan('volume')
-
-    # Convert to Q
-    a, b, c, alpha, beta, gamma = scan('unit_cell')
-
-    astar, bstar, cstar = RcSp(latpar2uv(a, b, c, alpha, beta, gamma))
-
-    qx, qy, qz = genq(h, k, l, [astar, bstar, cstar])
-    qmag = np.sqrt(qx ** 2 + qy ** 2 + qz ** 2)
+    if 'h_axis' in scan.map:
+        h_axis, k_axis, l_axis = scan('h_axis, k_axis, l_axis')
+        # Convert to Q
+        a, b, c, alpha, beta, gamma = scan('unit_cell')
+        astar, bstar, cstar = RcSp(latpar2uv(a, b, c, alpha, beta, gamma))
+        qx, qy, qz = genq(h_axis, k_axis, l_axis, [astar, bstar, cstar])
+    elif 'x_axis' in scan.map:
+        qx, qy, qz = scan('x_axis, y_axis, z_axis')
+    else:
+        raise Exception(f"axes are not recognised in file: {nexus_file}")
 
     # Plot summed images
     plt.figure(figsize=[18, 8], dpi=60)
@@ -629,30 +628,30 @@ def plot_remap_q(nexus_file):
     plt.show()
 
 
-def plot_qmag(nexus_file):
+def generate_twotheta_profile(nexus_file):
     """
-    Plot two0-theta intensity and intensity vs |Q|
-    :param nexus_file:
-    :return:
+    Generate a 1D profile of the reciprocal space map in units of wavevector-transfer (|Q|) and angle (two-theta)
+    :param nexus_file: filename of the re-mapped nexus file
+    :returns: array(two-theta), array(Q), array(intensity)
     """
 
     scan = get_remap(nexus_file)
 
     # Get reciprocal space data from file
-    h = scan('h_axis')
-    k = scan('k_axis')
-    l = scan('l_axis')
-    vol = scan('volume')
-
-    # Convert to Q
-    a, b, c, alpha, beta, gamma = scan('unit_cell')
     energy = scan('incident_energy')
+    vol = scan('volume')
+    if 'h_axis' in scan.map:
+        h_axis, k_axis, l_axis = scan('h_axis, k_axis, l_axis')
+        # Convert to Q
+        a, b, c, alpha, beta, gamma = scan('unit_cell')
+        astar, bstar, cstar = RcSp(latpar2uv(a, b, c, alpha, beta, gamma))
+        qx, qy, qz = genq(h_axis, k_axis, l_axis, [astar, bstar, cstar])
+    elif 'x_axis' in scan.map:
+        qx, qy, qz = scan('x_axis, y_axis, z_axis')
+    else:
+        raise Exception(f"axes are not recognised in file: {nexus_file}")
 
-    astar, bstar, cstar = RcSp(latpar2uv(a, b, c, alpha, beta, gamma))
-
-    qx, qy, qz = genq(h, k, l, [astar, bstar, cstar])
     qmag = np.sqrt(qx ** 2 + qy ** 2 + qz ** 2)
-
     qmag = qmag.reshape(-1)
     qvol = vol.reshape(-1)
     bin_cen = np.arange(qmag.min(), qmag.max(), 0.001)
@@ -660,7 +659,18 @@ def plot_qmag(nexus_file):
     bin_pos = np.digitize(qmag, bin_edge) - 1
     bin_sum = [np.mean(qvol[bin_pos == n]) for n in range(len(bin_cen))]
     tth = cal2theta(bin_cen, energy)
+    return tth, bin_cen, bin_sum
 
+
+def plot_qmag(nexus_file):
+    """
+    Plot two0-theta intensity and intensity vs |Q|
+    :param nexus_file:
+    :return:
+    """
+
+    tth, bin_cen, bin_sum = generate_twotheta_profile(nexus_file)
+    scan = get_remap(nexus_file)
     title2 = scan.format('{filename}\n{scan_command}')
 
     plt.figure(dpi=100)
