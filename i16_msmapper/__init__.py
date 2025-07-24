@@ -44,15 +44,15 @@ $ msmapper -bean /location/of/bean.json
 
 By Dan Porter, PhD
 Diamond Light Source Ltd.
-2023
+2023-2025
 """
 import sys
 
 from i16_msmapper.mapper_runner import run_msmapper, get_nexus_hkl, get_pixel_steps, msmapper_version
 from i16_msmapper.tkmsmapper import MsMapperGui
 
-__version__ = '1.5.0'
-__date__ = '04/07/25'
+__version__ = '1.6.0'
+__date__ = '24/07/25'
 
 
 def version_info():

@@ -1,7 +1,7 @@
 """
 tkGui: MsMapper
 """
-import os.path
+import os
 import datetime
 import json
 
@@ -16,12 +16,18 @@ from i16_msmapper import mapper_runner
 from i16_msmapper import mapper_plotter
 
 CONFIG_FILE = os.path.join(mapper_runner.TEMPDIR, 'i16_msmapper_config.json')
+CONFIG_NAME = 'config'
 FILEDIR = 'filedir'
 TMPDIR = 'tmpdir'
+TMPBEAN = 'tmp_bean'
+TMPNXS = 'tmp_nxs'
 SHELLCMD = 'shellcmd'
 CONFIG = {
+    CONFIG_NAME: CONFIG_FILE,
     FILEDIR: datetime.datetime.now().strftime('/dls/i16/data/%Y'),
     TMPDIR: mapper_runner.TEMPDIR,
+    TMPBEAN: mapper_runner.TEMP_BEAN,
+    TMPNXS: mapper_runner.TEMP_NEXUS,
     SHELLCMD: mapper_runner.SHELL_CMD
 }
 
@@ -47,6 +53,7 @@ class MsMapperGui:
             activeForeground=txtcol)
         self.config = CONFIG.copy()
         self.load_config()
+        self.check_config()
         mapper_plotter.set_plot_defaults()
         from i16_msmapper import title
 
@@ -215,6 +222,9 @@ class MsMapperGui:
         var = tk.Button(frm, text='Calculate min step', font=BF, command=self.btn_get_step, bg=btn,
                         activebackground=btn_active)
         var.pack(side=tk.LEFT)
+        var = tk.Button(frm, text='Get from Output', font=BF, command=self.btn_output_size, bg=btn,
+                        activebackground=btn_active)
+        var.pack(side=tk.LEFT)
 
         # hkl cen
         frm = tk.Frame(mid)
@@ -323,12 +333,12 @@ class MsMapperGui:
 
     def save_config(self):
         """Save config to tempdir"""
-        json.dump(self.config, open(CONFIG_FILE, 'w'), indent=4)
+        json.dump(self.config, open(self.config[CONFIG_NAME], 'w'), indent=4)
 
     def load_config(self):
         """Load config dict from tempdir"""
-        if os.path.isfile(CONFIG_FILE):
-            with open(CONFIG_FILE, 'r') as config_file:
+        if os.path.isfile(self.config[CONFIG_NAME]):
+            with open(self.config[CONFIG_NAME], 'r') as config_file:
                 self.config.update(json.load(config_file))
             print('Config. file loaded')
 
@@ -341,6 +351,15 @@ class MsMapperGui:
         if field in self.config:
             return self.config[field]
         return default
+
+    def check_config(self):
+        """Check config directories are accessible"""
+        while os.access(self.config[CONFIG_NAME], os.W_OK):
+            self.config[CONFIG_NAME] = self.config[CONFIG_NAME].replace('i16_msmapper_config', 'i16_msmapper_config_new')
+        while os.access(self.config[TMPBEAN], os.W_OK):
+            self.config[TMPBEAN] = self.config[TMPBEAN].replace('tmp_remap', 'tmp_remap_new')
+        while os.access(self.config[TMPNXS], os.W_OK):
+            self.config[TMPNXS] = self.config[TMPNXS].replace('tmp_remap', 'tmp_remap_new')
 
     def get_files(self):
         """Get files"""
@@ -402,6 +421,7 @@ class MsMapperGui:
             'reduce_box': self.reduce_box.get(),
             'third_axis': direction_xyz if direction else None,
             'azi_plane_normal': direction_azi if direction else None,
+            'bean_file': self.config[TMPBEAN]
         }
         return options
 
@@ -440,7 +460,8 @@ class MsMapperGui:
         files = self.get_files()
         output_file = self.output_file.get()
         hkl_start, hkl_step, box_size = self.get_hkl()
-        script = mapper_runner.msmapper_script(files, output_file, hkl_start, box_size, hkl_step)
+        script = mapper_runner.msmapper_script(files, output_file, hkl_start, box_size, hkl_step,
+                                               bean_file=self.config[TMPBEAN])
 
         from i16_msmapper.tkwidgets import StringViewer
         StringViewer(script, 'i16 msmapper', width=101, max_height=12)
@@ -534,7 +555,7 @@ class MsMapperGui:
         if new_shell:
             self.config[SHELLCMD] = new_shell
             mapper_runner.SHELL_CMD = new_shell
-            bean_file = os.path.join(mapper_runner.TEMPDIR, mapper_runner.TEMP_BEAN)
+            bean_file = mapper_runner.TEMP_BEAN
             try:
                 messagebox.showinfo(
                     title='i16 mapper',
@@ -640,10 +661,22 @@ class MsMapperGui:
         self.hkl_centre.set(f"[{hi:.3f},{ki:.3f},{li:.3f}]")
         self.hkl_start.set(f"[{h:.3f},{k:.3f},{l:.3f}]")
 
+    def btn_output_size(self):
+        """Get HKL start, step and size from output file"""
+        output_file = self.output_file.get()
+        h_min, h_step, h_size, k_min, k_step, k_size, l_min, l_step, l_size = mapper_runner.get_remap_values(output_file)
+        hi = h_min + h_step * (h_size / 2)
+        ki = k_min + k_step * (k_size / 2)
+        li = l_min + l_step * (l_size / 2)
+        self.hkl_centre.set(f"[{hi:.3f},{ki:.3f},{li:.3f}]")
+        self.hkl_start.set(f"[{h_min:.3f},{k_min:.3f},{l_min:.3f}]")
+        self.hkl_step.set(f"[{h_step},{k_step},{l_step}]")
+        self.box_size.set(f"[{h_size:.0f},{k_size:.0f},{l_size:.0f}]")
+
     def btn_get_step(self):
         """Run msmapper to get minimum pixel step"""
         files = self.get_files()
-        dh, dk, dl = mapper_runner.get_pixel_steps(files[0])
+        dh, dk, dl = mapper_runner.get_pixel_steps(files[0], self.config[TMPBEAN], self.config[TMPNXS])
         self.hkl_step.set(f"[{dh:.4f}, {dk:.4f}, {dl:.4f}]")
 
     def event_set_hkl_start(self, event):
@@ -677,7 +710,9 @@ class MsMapperGui:
         if self.join_files.get():
             mapper_runner.run_msmapper(**options)
         else:
+            # TODO: fix output_dir filenames
             output_dir = file if os.path.isdir(file := options['output_file']) else os.path.dirname(file)
+            # TODO: allow more options in rsmap_batch
             cmd_list = mapper_runner.rsmap_batch(
                 input_files=options['input_files'],
                 output_directory=output_dir,
@@ -779,7 +814,7 @@ class MsMapperGui:
         files = self.get_files()
         output_file = self.output_file.get()
         if output_file and os.path.isfile(output_file) and os.path.isfile(files[0]):
-            coordinates = mapper_runner.generate_pixel_coordinates(files[0])
+            coordinates = mapper_runner.generate_pixel_coordinates(files[0], bean_file=self.config[TMPBEAN])
             mapper_plotter.plot_remap_lab(output_file, coordinates)
         else:
             messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
