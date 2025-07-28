@@ -11,7 +11,7 @@ import tkinter as tk
 from tkinter import messagebox, filedialog, simpledialog
 
 from i16_msmapper.tkwidgets import TF, BF, SF, TTF, HF, bkg, ety, btn, opt, btn_active, opt_active, txtcol, \
-    ety_txt, popup_about, popup_help, topmenu
+    ety_txt, popup_about, popup_help, topmenu, popup_error, popup_info
 from i16_msmapper import mapper_runner
 from i16_msmapper import mapper_plotter
 
@@ -334,13 +334,18 @@ class MsMapperGui:
     def save_config(self):
         """Save config to tempdir"""
         json.dump(self.config, open(self.config[CONFIG_NAME], 'w'), indent=4)
+        os.chmod(self.config[CONFIG_NAME], 0o777)  # ensure file is readable
 
     def load_config(self):
         """Load config dict from tempdir"""
+        # Check config file is writeable
+        while os.path.isfile(self.config[CONFIG_NAME]) and not os.access(self.config[CONFIG_NAME], os.W_OK):
+            self.config[CONFIG_NAME] = self.config[CONFIG_NAME].replace('i16_msmapper_config', 'i16_msmapper_config_new')
+        # Open writeable config file
         if os.path.isfile(self.config[CONFIG_NAME]):
             with open(self.config[CONFIG_NAME], 'r') as config_file:
                 self.config.update(json.load(config_file))
-            print('Config. file loaded')
+            print(f"Config. file loaded: {self.config[CONFIG_NAME]}")
 
             # update mapper_runner parameters
             mapper_runner.TEMPDIR = self.config[TMPDIR]
@@ -364,7 +369,7 @@ class MsMapperGui:
         while os.path.isfile(self.config[TMPNXS]) and not os.access(self.config[TMPNXS], os.W_OK):
             self.config[TMPNXS] = self.config[TMPNXS].replace('tmp_remap', 'tmp_remap_new')
         print('Config:')
-        print('\n'.join(f"{name}: {value}" for name, value in self.config.items()))
+        print('\n'.join(f"{name:10}: {value}" for name, value in self.config.items()))
 
     def get_files(self):
         """Get files"""
@@ -499,7 +504,7 @@ class MsMapperGui:
             from i16_msmapper.tkwidgets import StringViewer
             StringViewer(text, files[0], width=101, max_height=12)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{files[0]}")
+            popup_error(f"File does not exist:\n{files[0]}", self.root)
 
     def menu_inspect_output(self):
         """Menu item inspect input file"""
@@ -510,7 +515,7 @@ class MsMapperGui:
             from i16_msmapper.tkwidgets import StringViewer
             StringViewer(text, output_file, width=101, max_height=12)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def menu_run_batch(self):
         """Menu item run batch"""
@@ -546,9 +551,9 @@ class MsMapperGui:
             if os.path.isdir(new_dir) and os.access(new_dir, os.W_OK):
                 self.config[TMPDIR] = new_dir
                 mapper_runner.TEMPDIR = new_dir
-                messagebox.showinfo('i16 mapper', 'New Temp dir is set:\n%s' % new_dir)
+                popup_info('New Temp dir is set:\n%s' % new_dir, self.root)
             else:
-                messagebox.showinfo('i16 mapper', 'Directory does not exist or is not writable:\n%s' % new_dir)
+                popup_info('Directory does not exist or is not writable:\n%s' % new_dir, self.root)
 
     def menu_set_shell(self):
         """Menu item set shell command"""
@@ -562,15 +567,9 @@ class MsMapperGui:
             mapper_runner.SHELL_CMD = new_shell
             bean_file = mapper_runner.TEMP_BEAN
             try:
-                messagebox.showinfo(
-                    title='i16 mapper',
-                    message=f"Shell command changed, example:\n{new_shell % bean_file}"
-                )
+                popup_info(f"Shell command changed, example:\n{new_shell % bean_file}", self.root)
             except TypeError:
-                messagebox.showerror(
-                    title='i16 mapper',
-                    message="Shell command is incorrect, possibly missing %s at end"
-                )
+                popup_error("Shell command is incorrect, possibly missing %s at end", self.root)
 
     def menu_reset_config(self):
         self.config = CONFIG.copy()
@@ -659,24 +658,30 @@ class MsMapperGui:
     def btn_output_hkl(self):
         """Get HKL start value from output file"""
         output_file = self.output_file.get()
-        hkl_cen = mapper_runner.get_nexus_hkl(output_file)
-        hkl_start, hkl_step, box_size = self.get_hkl()
-        h, k, l = np.asarray(hkl_cen) - (np.asarray(hkl_step) * np.asarray(box_size) / 2.)
-        hi, ki, li = hkl_cen
-        self.hkl_centre.set(f"[{hi:.3f},{ki:.3f},{li:.3f}]")
-        self.hkl_start.set(f"[{h:.3f},{k:.3f},{l:.3f}]")
+        if os.path.isfile(output_file):
+            hkl_cen = mapper_runner.get_nexus_hkl(output_file)
+            hkl_start, hkl_step, box_size = self.get_hkl()
+            h, k, l = np.asarray(hkl_cen) - (np.asarray(hkl_step) * np.asarray(box_size) / 2.)
+            hi, ki, li = hkl_cen
+            self.hkl_centre.set(f"[{hi:.3f},{ki:.3f},{li:.3f}]")
+            self.hkl_start.set(f"[{h:.3f},{k:.3f},{l:.3f}]")
+        else:
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_output_size(self):
         """Get HKL start, step and size from output file"""
         output_file = self.output_file.get()
-        h_min, h_step, h_size, k_min, k_step, k_size, l_min, l_step, l_size = mapper_runner.get_remap_values(output_file)
-        hi = h_min + h_step * (h_size / 2)
-        ki = k_min + k_step * (k_size / 2)
-        li = l_min + l_step * (l_size / 2)
-        self.hkl_centre.set(f"[{hi:.3f},{ki:.3f},{li:.3f}]")
-        self.hkl_start.set(f"[{h_min:.3f},{k_min:.3f},{l_min:.3f}]")
-        self.hkl_step.set(f"[{h_step},{k_step},{l_step}]")
-        self.box_size.set(f"[{h_size:.0f},{k_size:.0f},{l_size:.0f}]")
+        if os.path.isfile(output_file):
+            h_min, h_step, h_size, k_min, k_step, k_size, l_min, l_step, l_size = mapper_runner.get_remap_values(output_file)
+            hi = h_min + h_step * (h_size / 2)
+            ki = k_min + k_step * (k_size / 2)
+            li = l_min + l_step * (l_size / 2)
+            self.hkl_centre.set(f"[{hi:.3f},{ki:.3f},{li:.3f}]")
+            self.hkl_start.set(f"[{h_min:.3f},{k_min:.3f},{l_min:.3f}]")
+            self.hkl_step.set(f"[{h_step},{k_step},{l_step}]")
+            self.box_size.set(f"[{h_size:.0f},{k_size:.0f},{l_size:.0f}]")
+        else:
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_get_step(self):
         """Run msmapper to get minimum pixel step"""
@@ -732,7 +737,7 @@ class MsMapperGui:
         if files and os.path.isfile(files[0]):
             mapper_plotter.plot_scan(files[0])
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{files[0]}")
+            popup_error(f"File does not exist:\n{files[0]}", self.root)
 
     def btn_plot_images(self):
         """Plot scan images"""
@@ -740,7 +745,7 @@ class MsMapperGui:
         if files and os.path.isfile(files[0]):
             mapper_plotter.slider_scan(files[0])
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{files[0]}")
+            popup_error(f"File does not exist:\n{files[0]}", self.root)
 
     def btn_plot_scan_hist(self):
         """Plot HKL cuts and planes"""
@@ -748,7 +753,7 @@ class MsMapperGui:
         if files and os.path.isfile(files[0]):
             mapper_plotter.plot_histogram(files[0])
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{files[0]}")
+            popup_error(f"File does not exist:\n{files[0]}", self.root)
 
     def btn_plot_hist(self):
         """Plot HKL cuts and planes"""
@@ -756,7 +761,7 @@ class MsMapperGui:
         if output_file and os.path.isfile(output_file):
             mapper_plotter.plot_histogram(output_file)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_plot_hkl(self):
         """Plot HKL cuts and planes"""
@@ -764,7 +769,7 @@ class MsMapperGui:
         if output_file and os.path.isfile(output_file):
             mapper_plotter.plot_remap_hkl(output_file)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_plot_hkl_images(self):
         """Plot HKL planes with slider"""
@@ -772,7 +777,7 @@ class MsMapperGui:
         if output_file and os.path.isfile(output_file):
             mapper_plotter.slider_remap(output_file)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_plot_q(self):
         """Plot Q cuts and planes"""
@@ -780,7 +785,7 @@ class MsMapperGui:
         if output_file and os.path.isfile(output_file):
             mapper_plotter.plot_remap_q(output_file)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_plot_tth(self):
         """Plot magnitude of two-theta and q"""
@@ -788,7 +793,7 @@ class MsMapperGui:
         if output_file and os.path.isfile(output_file):
             mapper_plotter.plot_qmag(output_file)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_plot_3d_points(self):
         """Plot magnitude of two-theta and q"""
@@ -796,10 +801,11 @@ class MsMapperGui:
         if output_file and os.path.isfile(output_file):
             mapper_plotter.plot_remap_3dpoints(output_file)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_plot_voxels(self):
         """Plot magnitude of two-theta and q"""
+        from i16_msmapper import title
         output_file = self.output_file.get()
         if output_file and os.path.isfile(output_file):
             scan = hdfmap.NexusLoader(output_file)
@@ -808,11 +814,11 @@ class MsMapperGui:
             if volume_size >= 1e6:
                 msg = (f"3D volumetric plots take some time, this will take "
                        f"~{0.5 * volume_size / 1e6:.2f} minutes, continue?")
-                ask = messagebox.askokcancel('i16_msmapper', msg)
+                ask = messagebox.askokcancel(title(), msg, parent=self.root)
             if ask:
                 mapper_plotter.plot_remap_voxels(output_file)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_plot_labframe(self):
         """Plot magnitude of two-theta and q"""
@@ -822,7 +828,7 @@ class MsMapperGui:
             coordinates = mapper_runner.generate_pixel_coordinates(files[0], bean_file=self.config[TMPBEAN])
             mapper_plotter.plot_remap_lab(output_file, coordinates)
         else:
-            messagebox.showerror('i16_msmapper', f"File does not exist:\n{output_file}")
+            popup_error(f"File does not exist:\n{output_file}", self.root)
 
     def btn_close(self):
         """close window"""

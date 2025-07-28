@@ -12,9 +12,8 @@ By Dan Porter, Diamond Light Source Ltd. 2024-2025
 
 ### Usage
 ```commandline
-$ module load msmapper/1.9
-$ python -m pip install --upgrade git+https://github.com/DiamondLightSource/i16_msmapper.git
-$ python -m i16_msmapper
+$ module load i16_msmapper
+$ i16_msmapper
 ```
 
 ### Installation

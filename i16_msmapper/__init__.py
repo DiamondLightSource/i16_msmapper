@@ -8,8 +8,8 @@ https://github.com/DawnScience/scisoft-core/blob/master/uk.ac.diamond.scisoft.an
 https://alfred.diamond.ac.uk/documentation/javadocs/GDA/master/uk/ac/diamond/scisoft/analysis/diffraction/MillerSpaceMapper.html
 https://confluence.diamond.ac.uk/display/I16/HKL+Mapping
 
-Usage:
-    $ module load msmapper
+Usage (at Diamond):
+    $ module load i16_msmapper
     $ python -m i16_msmapper
 
 How it works:
@@ -51,8 +51,8 @@ import sys
 from i16_msmapper.mapper_runner import run_msmapper, get_nexus_hkl, get_pixel_steps, msmapper_version
 from i16_msmapper.tkmsmapper import MsMapperGui
 
-__version__ = '1.6.0'
-__date__ = '24/07/25'
+__version__ = '1.6.1'
+__date__ = '28/07/25'
 
 
 def version_info():

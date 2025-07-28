@@ -41,15 +41,39 @@ def popup_message(parent, title, message):
     return root
 
 
-def popup_about():
+def popup_about(root=None):
     """Create about message"""
-    from i16_msmapper import version_info, module_info
+    from i16_msmapper import version_info, module_info, title
     msg = "%s\n\n" \
           "A simple GUI to run the msmapper code on Beamline I16." \
           "\n\n" \
           "Module Info:\n%s\n\n" \
           "By Dan Porter, Diamond Light Source Ltd" % (version_info(), module_info())
-    messagebox.showinfo('About', msg)
+    messagebox.showinfo(
+        title=f"About: {title()}",
+        message=msg,
+        parent=root,
+    )
+
+
+def popup_info(message, root=None):
+    """Create info messagebox"""
+    from i16_msmapper import title
+    messagebox.showinfo(
+        title=title(),
+        message=message,
+        parent=root,
+    )
+
+
+def popup_error(message, root=None):
+    """Create error messagebox"""
+    from i16_msmapper import title
+    messagebox.showerror(
+        title=title(),
+        message=message,
+        parent=root,
+    )
 
 
 def popup_help():
