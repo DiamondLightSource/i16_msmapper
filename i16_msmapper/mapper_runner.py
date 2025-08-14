@@ -68,8 +68,10 @@ def msmapper(bean_file):
     """
     print('\n\n\n################# Starting msmapper ###################')
     print(f"Running command:\n{SHELL_CMD % bean_file}\n\n\n")
-    output = subprocess.run(SHELL_CMD % bean_file, shell=True, capture_output=True)
-    print(output.stdout.decode())
+    output = subprocess.run(SHELL_CMD % bean_file, shell=True, capture_output=True, text=True)
+    output.check_returncode()
+    print(output.stderr)
+    print(output.stdout)
     print('\n\n\n################# msmapper finished ###################\n\n\n')
 
 
