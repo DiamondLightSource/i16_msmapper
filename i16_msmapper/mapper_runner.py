@@ -37,16 +37,16 @@ TEMP_NEXUS = os.path.join(TEMPDIR, TEMP_NEXUS)
 class Options(TypedDict):
     input_files: list[str]
     output_file: str
-    start: None | list[float, float, float]
-    shape: None | list[int, int, int]
-    step: None | list[float] | list[float, float, float]
-    output_mode: None | str
-    normalisation: None | str
-    polarisation: None | bool
-    detector_region: None | list[int, int, int, int]
-    reduce_box: None | bool
-    third_axis: None | list[float, float, float]
-    azi_plane_normal: None | list[float, float, float]
+    start: None | list[float, float, float] = None
+    shape: None | list[int, int, int] = None
+    step: None | list[float] | list[float, float, float] = None
+    output_mode: None | str = None
+    normalisation: None | str = None
+    polarisation: None | bool = None
+    detector_region: None | list[int, int, int, int] = None
+    reduce_box: None | bool = None
+    third_axis: None | list[float, float, float] = None
+    azi_plane_normal: None | list[float, float, float] = None
 
 
 def msmapper_version():

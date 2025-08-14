@@ -43,7 +43,7 @@ MSMapper can be run outside Diamond by downloading the executable file.
 The following options are for Windows but files for other operating systems are available and the process is similar.
 
 1. Install i16_msmapper as above
-2. Access the MSMapper files for different operating systems here: https://alfred.diamond.ac.uk/MSMapper/master/downloads/builds-snapshot/ 
+2. Access the MSMapper files for different operating systems here: https://alfred.diamond.ac.uk/MSMapper/master/builds-snapshot/ 
 3. Download "MSMapper-1.7.0.v20240513-1606-win32.x86_64.zip" or equivalent
 4. Unzip the file to your choosen location
 5. Open the unzipped folder and copy the path of the executable (*shift-right-click* on `msmapperrc.exe` and select **copy as path**)

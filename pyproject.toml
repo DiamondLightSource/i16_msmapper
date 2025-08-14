@@ -9,7 +9,6 @@ dependencies = [
   "numpy",
   "matplotlib",
   "hdfmap",
-  "typing",
   "typing_extensions",
 ]
 requires-python = ">=3.10"
