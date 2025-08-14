@@ -5,6 +5,7 @@ code taken from https://github.com/DanPorter/i16_diffractometer
 
 from typing import List, Tuple
 import numpy as np
+import matplotlib.pyplot as plt
 import h5py
 
 
