@@ -74,6 +74,7 @@ def msmapper(bean_file, log_file=None):
         print(output.stderr)
         print(output.stdout)
     else:
+        print('Output written to:', log_file)
         with open(log_file, 'w') as f:
             f.write(f"Running command:\n{SHELL_CMD % bean_file}\n\n\n")
             f.write(output.stderr)
