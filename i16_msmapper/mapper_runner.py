@@ -59,18 +59,26 @@ def msmapper_version():
         return 0
 
 
-def msmapper(bean_file):
+def msmapper(bean_file, log_file=None):
     """
     Run msmapper in subprocess, requires to be in msmapper module
       (python 3.9)$ msmapper -bean bean_file
     :param bean_file: str location of json file with input options
+    :param log_file: str location of log file (or None to print)
     :return: Returns on completion
     """
     print('\n\n\n################# Starting msmapper ###################')
     print(f"Running command:\n{SHELL_CMD % bean_file}\n\n\n")
     output = subprocess.run(SHELL_CMD % bean_file, shell=True, capture_output=True, text=True)
-    print(output.stderr)
-    print(output.stdout)
+    if log_file is None:
+        print(output.stderr)
+        print(output.stdout)
+    else:
+        with open(log_file, 'w') as f:
+            f.write(f"Running command:\n{SHELL_CMD % bean_file}\n\n\n")
+            f.write(output.stderr)
+            f.write('\n\n')
+            f.write(output.stdout)
     output.check_returncode()
     print('\n\n\n################# msmapper finished ###################\n\n\n')
 
@@ -439,13 +447,14 @@ def create_bean_file(bean_file=None, **kwargs: Unpack[Options]):
     return bean_file
 
 
-def run_msmapper(**kwargs: Unpack[Options]):
+def run_msmapper(log_file=None, **kwargs: Unpack[Options]):
     """
     Create the input file and run msmapper
      currently only allows a few standard inputs: hkl_start, shape and step values.
+    :param log_file: filename of log file, or None to print output
     :params: see mapper_runner.create_bean
     :return: str file location of bean file
     """
     bean_file = create_bean_file(**kwargs)
-    msmapper(bean_file)
+    msmapper(bean_file, log_file=log_file)
 
