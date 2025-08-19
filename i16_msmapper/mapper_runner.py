@@ -184,7 +184,7 @@ def get_remap_values(nexus_file):
     return h_min, h_step, h_size, k_min, k_step, k_size, l_min, l_step, l_size
 
 
-def get_pixel_steps(nexus_file, nxs_file=TEMP_NEXUS, bean_file=TEMP_BEAN):
+def get_pixel_steps(nexus_file, nxs_file=TEMP_NEXUS, bean_file=TEMP_BEAN, log_file=None):
     """
     Get minimum pixel steps for a scan file
      - Creates & stores json bean file with outputMode: 'Coords_HKL' + fixed pixel indexes
@@ -193,6 +193,9 @@ def get_pixel_steps(nexus_file, nxs_file=TEMP_NEXUS, bean_file=TEMP_BEAN):
      - determines variation in hkl between adjacent pixels
 
     :param nexus_file: str filename of .nxs scan file
+    :param nxs_file: str filename of .nxs scan file
+    :param bean_file: str filename of bean file
+    :param log_file: str filename of log file
     :return: h_diff, k_diff, l_diff
     """
 
@@ -205,7 +208,7 @@ def get_pixel_steps(nexus_file, nxs_file=TEMP_NEXUS, bean_file=TEMP_BEAN):
     json.dump(bean, open(bean_file, 'w'), indent=4)
     print('bean file written to: %s' % bean_file)
 
-    msmapper(bean_file)
+    msmapper(bean_file, log_file=log_file)
 
     # 3. Read nxs file
     print('\nReading %s' % nxs_file)
