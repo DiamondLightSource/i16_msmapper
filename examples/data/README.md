@@ -17,6 +17,10 @@ Other files contain the detector data, these are linked directly inside the file
 The relative location of the files is important to maintain links within the files, such as links to detector data,
 or links to the raw data from processed files.
 
+## Example Notebook
+A jupyter notebook showing how to read and plot data from this file is provided in this repo:
+ - [msmapper_read_plot_transform.ipynb](https://github.com/DiamondLightSource/i16_msmapper/blob/master/examples/msmapper_read_plot_transform.ipynb)
+
 ## New Nexus Files (2025 onwards)
 In September 2025, I16 moved to a new structure for their NeXus files.
 
