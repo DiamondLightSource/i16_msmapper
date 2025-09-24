@@ -3,7 +3,6 @@ NXtransformations
 code taken from https://github.com/DanPorter/i16_diffractometer
 """
 
-from typing import List, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
@@ -250,7 +249,7 @@ def get_dataset_value(path: str, group: h5py.Group | h5py.File, default):
     return default
 
 
-def nx_depends_on_chain(path: str, hdf_file: h5py.File) -> List[str]:
+def nx_depends_on_chain(path: str, hdf_file: h5py.File) -> list[str]:
     """
     Returns list of paths in a transformation chain, linked by 'depends_on'
     :param path: hdf path of initial dataset or group
@@ -298,7 +297,7 @@ def nx_transformations_max_size(path: str, hdf_file: h5py.File) -> int:
     return dataset_size
 
 
-def nx_transformations(path: str, index: int, hdf_file: h5py.File, print_output=False) -> List[np.ndarray]:
+def nx_transformations(path: str, index: int, hdf_file: h5py.File, print_output=False) -> list[np.ndarray]:
     """
     Create list of 4x4 transformation matrices matching transformations along an NXtransformations chain
     :param path: str hdf path of the first point in the chain (Group or Dataset)
@@ -475,7 +474,7 @@ class NXSsample:
     def __repr__(self):
         return f"NXSsample({self.sample})"
 
-    def hkl2q(self, hkl: Tuple[float, float, float] | np.ndarray):
+    def hkl2q(self, hkl: tuple[float, float, float] | np.ndarray):
         """
         Returns wavecector direction for given hkl
         :param hkl: Miller indices, in units of reciprocal lattice vectors
@@ -532,7 +531,7 @@ class NXDetectorModule:
         """
         return self.size, self.data_size[0], self.data_size[1]
 
-    def pixel_wavevector(self, point: Tuple[int, int, int], wavelength_a) -> np.ndarray:
+    def pixel_wavevector(self, point: tuple[int, int, int], wavelength_a) -> np.ndarray:
         """
         Return wavevector of pixel
         :param point: (n, i, j) == (frame, slow_axis_pixel, fast_axis_pixel)
@@ -541,7 +540,7 @@ class NXDetectorModule:
         """
         return wavevector(wavelength_a) * self.pixel_direction(point)
 
-    def pixel_direction(self, point: Tuple[int, int, int]) -> np.ndarray:
+    def pixel_direction(self, point: tuple[int, int, int]) -> np.ndarray:
         """
         Return direction of pixel
         :param point: (n, i, j) == (frame, slow_axis_pixel, fast_axis_pixel)
@@ -549,7 +548,7 @@ class NXDetectorModule:
         """
         return norm_vector(self.pixel_position(point))
 
-    def pixel_position(self, point: Tuple[int, int, int]) -> np.ndarray:
+    def pixel_position(self, point: tuple[int, int, int]) -> np.ndarray:
         """
         Return position of pixel (n, i, j)
             n = frame in scan
@@ -638,16 +637,16 @@ class NXScan:
         detector_module = self.detectors[0].modules[0]
         return detector_module.shape()
 
-    def detector_q(self, point: Tuple[int, int, int] = (0, 0, 0)):
+    def detector_q(self, point: tuple[int, int, int] = (0, 0, 0)):
         wavelength = self.beam.wl
         ki = self.beam.incident_wavevector
         detector_module = self.detectors[0].modules[0]
         kf = detector_module.pixel_wavevector(point, wavelength)
         return kf - ki
 
-    def hkl(self, point: Tuple[int, int, int] = (0, 0, 0)):
+    def hkl(self, point: tuple[int, int, int] = (0, 0, 0)):
         q = self.detector_q(point)
-        z = self.sample.transforms[point[0]][:3, :3]
+        z = self.sample.transforms[-1][:3, :3]  #TODO: should this chain all transforms?
         ub = 2 * np.pi * self.sample.ub_matrix
 
         inv_ub = np.linalg.inv(ub)
@@ -656,7 +655,7 @@ class NXScan:
         hphi = np.dot(inv_z, q)
         return np.dot(inv_ub, hphi).T
 
-    def hkl2q(self, hkl: Tuple[float, float, float] | np.ndarray):
+    def hkl2q(self, hkl: tuple[float, float, float] | np.ndarray):
         """
         Returns wavecector direction for given hkl
         :param hkl: Miller indices, in units of reciprocal lattice vectors
@@ -687,7 +686,7 @@ class NXScan:
         ax.set_xlabel('X [mm]')
         ax.set_ylabel('Z [mm]')
         ax.set_zlabel('Y [mm]')
-        ax.set_title(instrument_name)
+        ax.set_title(f"Instrument: {instrument_name}")
         # ax.set_aspect('equalxz')
         fig.show()
 
@@ -731,7 +730,7 @@ class NXScan:
         ax.set_xlabel('X')
         ax.set_ylabel('Z')
         ax.set_zlabel('Y')
-        ax.set_title(f"HKL: {self.hkl(pixel_centre)}")
+        ax.set_title(f"Wavevectors\nHKL: {self.hkl(pixel_centre)}")
         ax.set_aspect('equal')
         fig.show()
 

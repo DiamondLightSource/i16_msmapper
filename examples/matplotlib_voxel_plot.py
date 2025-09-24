@@ -14,16 +14,19 @@ import matplotlib.pyplot as plt
 import h5py
 import time
 
-file = 'data/1041304_rsmap.nxs'
+file = 'data/processing/1041304_rsmap.nxs'
+file = '/dls/i16/data/2025/cm40634-12/processing/1105476_workflows_msmapper.nxs'
 filename = os.path.basename(file)
 
 with h5py.File(file, 'r') as hdf:
     # the following are links to the original scan file
     scan_command = hdf['/entry0/scan_command'].asstr()[()]  # str
-    crystal = hdf['/entry0/before_scan/xtlinfo_extra/crystal_name'][()]  # str
-    temp = hdf['/entry0/before_scan/temperature_controller/Tsample'][()]  # float
+    # crystal = hdf['/entry0/before_scan/xtlinfo_extra/crystal_name'][()]  # str
+    # temp = hdf['/entry0/before_scan/temperature_controller/Tsample'][()]  # float
+    crystal = hdf['/entry0/sample/name'][()]  # str
+    temp = hdf['/entry0/instrument/temperature_controller/Tsample'][()]  # float
     unit_cell = np.reshape(hdf['/entry0/sample/unit_cell'], -1)  # 1D array, length 6
-    energy = hdf['/entry0/sample/beam/incident_energy'][0]  # # float
+    energy = hdf['/entry0/sample/beam/incident_energy'][...]  # # float
     ubmatrix = hdf['/entry0/sample/ub_matrix'][0]  # 3D array, shape (3,3)
     # this is the processed data
     haxis = hdf['/processed/reciprocal_space/h-axis'][()]  # 1D array, length n
@@ -48,7 +51,7 @@ volume = volume * solid_angle
 # volume = volume[::2, ::2, ::2]
 
 # Coordinates - plt.voxel takes coordinates of each corner, so hkl must be extended or volume reduced
-hh, kk, ll = np.meshgrid(haxis, kaxis, laxis)
+kk, hh, ll = np.meshgrid(kaxis, haxis, laxis)
 # volume = volume[:-1, :-1, :-1]
 print(f"h-axis: {hh.shape}, min={haxis.min()}, max={haxis.max()}")
 print(f"k-axis: {kk.shape}, min={kaxis.min()}, max={kaxis.max()}")
