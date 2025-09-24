@@ -8,9 +8,9 @@ Click the links to view the file using myHDF5 viewer.
 | Filename                                                                                                                                                         | Description                                       |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
 | [1041304.nxs](https://myhdf5.hdfgroup.org/view?url=https%3A%2F%2Fgithub.com%2FDiamondLightSource%2Fi16_msmapper%2Fblob%2Fmaster%2Fexamples%2Fdata%2F1041304.nxs) | Old style NeXus file, rocking curve scan          |
-| [processing/1041304_rsmap.nxs](https://myhdf5.hdfgroup.org/view?url=https%3A%2F%2Fgithub.com%2FDiamondLightSource%2Fi16_msmapper%2Fblob%2Fmaster%2Fexamples%2Fdata%2F1041304_rsmap.nxs)      | MSmapper processed file of above                  |
-| [1109527.nxs]()                                                                                                                                                  | New style NeXus file, rocking-scan of single peak |
-| [processing/1109527_rsmap_small.nxs]()                                                                                                                           | MSmapper processed file of above                  |
+| [processing/1041304_rsmap.nxs](https://myhdf5.hdfgroup.org/view?url=https%3A%2F%2Fgithub.com%2FDiamondLightSource%2Fi16_msmapper%2Fblob%2Fmaster%2Fexamples%2Fdata%2Fprocessing%2F1041304_rsmap.nxs)      | MSmapper processed file of above                  |
+| [1109527.nxs](https://myhdf5.hdfgroup.org/view?url=https%3A%2F%2Fgithub.com%2FDiamondLightSource%2Fi16_msmapper%2Fblob%2Fmaster%2Fexamples%2Fdata%2F1109527.nxs)                                                                                                                                                  | New style NeXus file, rocking-scan of single peak |
+| [processing/1109527_rsmap_small.nxs](https://myhdf5.hdfgroup.org/view?url=https%3A%2F%2Fgithub.com%2FDiamondLightSource%2Fi16_msmapper%2Fblob%2Fmaster%2Fexamples%2Fdata%2Fprocessing%2F1109527_rsmap_small.nxs)                                                                                                                           | MSmapper processed file of above                  |
 
 Other files contain the detector data, these are linked directly inside the files.
 
