@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 
-file = 'data/1041304_rsmap.nxs'
+file = 'data/processing/1041304_rsmap.nxs'
 filename = os.path.basename(file)
 
 with h5py.File(file, 'r') as hdf:
